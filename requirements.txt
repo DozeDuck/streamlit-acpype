@@ -1,3 +1,8 @@
 streamlit
+plotly
 kaleido
-acpype
+matplotlib
+seaborn
+scipy
+scikit-learn
+openpyxl
