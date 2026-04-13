@@ -109,25 +109,30 @@ def show_logs(stdout: str, stderr: str):
         st.code(stderr or "(empty)")
 
 
-def acpype_convert(uploaded, basename: str, net_charge: int, use_user_charge: bool):
+def acpype_convert(uploaded, basename: str, net_charge: int, charge_type: str):
     acpype_cmd = resolve_acpype_command()
+
+    charge_type = (charge_type or "").strip().lower()
+    allowed_charge_types = {"bcc", "gas", "user"}
+    if charge_type not in allowed_charge_types:
+        raise RuntimeError(
+            f"Unsupported charge type: {charge_type}. "
+            f"Supported values: {', '.join(sorted(allowed_charge_types))}."
+        )
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         suffix = Path(uploaded.name).suffix.lower()
         input_name = f"input{suffix}"
-        input_path = os.path.join(tmp_dir, input_name)
 
-        with open(input_path, "wb") as f:
+        with open(os.path.join(tmp_dir, input_name), "wb") as f:
             f.write(uploaded.getvalue())
 
         cmd = acpype_cmd + [
             "-i", input_name,
             "-b", sanitize_name(basename, "LIG"),
             "-n", str(int(net_charge)),
+            "-c", charge_type,
         ]
-
-        if use_user_charge:
-            cmd.extend(["-c", "user"])
 
         result = run_cmd(cmd, cwd=tmp_dir, timeout=1800)
 
@@ -157,8 +162,7 @@ def openbabel_convert(uploaded, input_format: str, output_format: str, output_st
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         original_name = sanitize_name(uploaded.name, "input")
-        input_path = os.path.join(tmp_dir, original_name)
-        with open(input_path, "wb") as f:
+        with open(os.path.join(tmp_dir, original_name), "wb") as f:
             f.write(uploaded.getvalue())
 
         if output_stem.strip():
@@ -205,6 +209,8 @@ def main():
         ]
     )
 
+    charge_options = ["bcc", "gas", "user"]
+
     with tab1:
         st.subheader("ACPYPE mol2 Conversion")
         mol2_file = st.file_uploader(
@@ -214,10 +220,12 @@ def main():
         )
         mol2_basename = st.text_input("Output prefix", value="LIG", key="mol2_basename")
         mol2_charge = st.number_input("Total charge", value=0, step=1, key="mol2_charge")
-        mol2_use_user_charge = st.checkbox(
-            "Use charges from the mol2 file (-c user)",
-            value=True,
-            key="mol2_use_user_charge",
+        mol2_charge_type = st.selectbox(
+            "Partial charge type",
+            options=charge_options,
+            index=2,
+            help="Choose the ACPYPE charge model. Use 'user' only if the input file already contains valid charges.",
+            key="mol2_charge_type",
         )
 
         if st.button("Run ACPYPE (mol2)", key="run_acpype_mol2"):
@@ -229,7 +237,7 @@ def main():
                         uploaded=mol2_file,
                         basename=mol2_basename,
                         net_charge=int(mol2_charge),
-                        use_user_charge=mol2_use_user_charge,
+                        charge_type=mol2_charge_type,
                     )
                     st.success("ACPYPE mol2 conversion completed successfully.")
                     show_logs(stdout, stderr)
@@ -254,6 +262,13 @@ def main():
         )
         pdb_basename = st.text_input("Output prefix", value="LIG", key="pdb_basename")
         pdb_charge = st.number_input("Total charge", value=0, step=1, key="pdb_charge")
+        pdb_charge_type = st.selectbox(
+            "Partial charge type",
+            options=charge_options,
+            index=1,
+            help="Choose the ACPYPE charge model. 'user' is usually not appropriate for standard PDB input unless charges are already defined in a compatible way.",
+            key="pdb_charge_type",
+        )
 
         if st.button("Run ACPYPE (pdb)", key="run_acpype_pdb"):
             if pdb_file is None:
@@ -264,7 +279,7 @@ def main():
                         uploaded=pdb_file,
                         basename=pdb_basename,
                         net_charge=int(pdb_charge),
-                        use_user_charge=False,
+                        charge_type=pdb_charge_type,
                     )
                     st.success("ACPYPE pdb conversion completed successfully.")
                     show_logs(stdout, stderr)
