@@ -96,10 +96,10 @@ def main():
     st.write("ACPYPE executable exists:", os.path.exists(ACPYPE_EXE))
     st.write("ACPYPE executable path:", ACPYPE_EXE)
 
-    uploaded = st.file_uploader("上传 .mol2 文件", type=["mol2"])
-    basename = st.text_input("输出前缀", value="LIG")
-    net_charge = st.number_input("总电荷", value=0, step=1)
-    use_user_charge = st.checkbox("使用 mol2 自带电荷 (-c user)", value=True)
+    uploaded = st.file_uploader("Upload .mol2 文件", type=["mol2"])
+    basename = st.text_input("Output prefix", value="LIG")
+    net_charge = st.number_input("Total Charge", value=0, step=1)
+    use_user_charge = st.checkbox("Use the charges in mol2 (-c user)", value=True)
 
     if uploaded and st.button("Run ACPYPE"):
         with tempfile.TemporaryDirectory() as tmp_dir:
