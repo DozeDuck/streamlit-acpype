@@ -317,7 +317,7 @@ def main():
             key="output_stem",
         )
 
-        st.caption("Example: upload eotaxin2.pdb, set input format to pdb, and output format to fasta.")
+        st.caption("Example: upload protein.pdb, set input format to pdb, and output format to fasta.")
 
         if st.button("Run Open Babel Conversion", key="run_obabel_convert"):
             if any_file is None:
