@@ -1,6 +1,7 @@
 name: gmx-acpype-min
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   - python=3.11
   - ambertools=24.8
