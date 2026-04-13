@@ -89,7 +89,7 @@ def resolve_acpype_command():
 
 
 def main():
-    st.title("ACPYPE mol2 转换测试")
+    st.title("ACPYPE mol2 Convertor")
 
     st.write("Conda python exists:", os.path.exists(CONDA_PYTHON))
     st.write("Conda python path:", CONDA_PYTHON)
@@ -101,7 +101,7 @@ def main():
     net_charge = st.number_input("总电荷", value=0, step=1)
     use_user_charge = st.checkbox("使用 mol2 自带电荷 (-c user)", value=True)
 
-    if uploaded and st.button("运行 ACPYPE"):
+    if uploaded and st.button("Run ACPYPE"):
         with tempfile.TemporaryDirectory() as tmp_dir:
             mol2_path = os.path.join(tmp_dir, "lig.mol2")
             with open(mol2_path, "wb") as f:
@@ -110,11 +110,11 @@ def main():
             try:
                 acpype_prefix, resolve_info = resolve_acpype_command()
             except Exception as e:
-                st.error("解析 ACPYPE 入口失败")
+                st.error("Parse ACPYPE access failure")
                 st.code(str(e))
                 return
 
-            st.subheader("ACPYPE 入口诊断")
+            st.subheader("ACPYPE access diagnosis")
             st.code(resolve_info)
 
             cmd = acpype_prefix + [
