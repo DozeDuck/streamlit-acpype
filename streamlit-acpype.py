@@ -151,7 +151,7 @@ def main():
                 st.error("ACPYPE 运行失败")
                 return
 
-            st.success("ACPYPE 运行成功")
+            st.success("ACPYPE Running Successful!")
 
             zip_path = os.path.join(tmp_dir, "acpype_output.zip")
             with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
@@ -165,7 +165,7 @@ def main():
 
             with open(zip_path, "rb") as f:
                 st.download_button(
-                    "下载结果 ZIP",
+                    "Download The Output ZIP",
                     data=f.read(),
                     file_name="acpype_output.zip",
                     mime="application/zip"
