@@ -1,5 +1,7 @@
 import os
 import re
+import sys
+from importlib import metadata
 import shutil
 import subprocess
 import tempfile
@@ -8,9 +10,11 @@ from pathlib import Path
 
 import streamlit as st
 
-CONDA_BIN = "/home/adminuser/.conda/bin"
-CONDA_PYTHON = f"{CONDA_BIN}/python"
-ACPYPE_EXE = f"{CONDA_BIN}/acpype"
+# Use the interpreter which actually runs Streamlit, not a cloud-specific absolute path.
+# This works on Conda, virtualenv and Streamlit Community Cloud.
+CONDA_PYTHON = sys.executable
+CONDA_BIN = str(Path(sys.executable).parent)
+ACPYPE_EXE = str(Path(CONDA_BIN) / "acpype")
 
 
 def run_cmd(cmd, cwd=None, timeout=1200):
@@ -43,8 +47,9 @@ def resolve_acpype_command():
     1) /home/adminuser/.conda/bin/acpype
     2) conda python + run_acpype.py
     """
-    if os.path.exists(ACPYPE_EXE):
-        return [ACPYPE_EXE]
+    acpype_exe = shutil.which("acpype", path=CONDA_BIN + os.pathsep + os.environ.get("PATH", ""))
+    if acpype_exe:
+        return [acpype_exe]
 
     probe = run_cmd(
         [
@@ -74,8 +79,8 @@ def resolve_obabel_command():
     Try to locate obabel first, then fall back to babel.
     """
     candidates = [
-        f"{CONDA_BIN}/obabel",
-        f"{CONDA_BIN}/babel",
+        str(Path(CONDA_BIN) / "obabel"),
+        str(Path(CONDA_BIN) / "babel"),
         shutil.which("obabel"),
         shutil.which("babel"),
     ]
@@ -200,6 +205,20 @@ def openbabel_convert(uploaded, input_format: str, output_format: str, output_st
 def main():
     st.set_page_config(page_title="ACPYPE & Open Babel Converter", layout="centered")
     st.title("ACPYPE & Open Babel Converter")
+
+    # Diagnostics are lazy, only displayed if the user opens the sidebar expander.
+    with st.sidebar.expander("Dependency diagnostics", expanded=False):
+        st.caption(f"Python executable: {sys.executable}")
+        st.caption(f"Python version: {sys.version.split()[0]}")
+        for package in ("streamlit", "acpype", "openbabel-wheel", "ambertools"):
+            try:
+                version = metadata.version(package)
+            except metadata.PackageNotFoundError:
+                version = "not listed in Python package metadata"
+            st.text(f"{package}: {version}")
+        envpath = CONDA_BIN + os.pathsep + os.environ.get("PATH", "")
+        for exe in ("acpype", "obabel", "antechamber"):
+            st.text(f"{exe}: {shutil.which(exe, path=envpath) or 'NOT FOUND'}")
 
     tab1, tab2, tab3 = st.tabs(
         [

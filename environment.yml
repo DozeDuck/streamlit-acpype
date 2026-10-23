@@ -1,3 +1,5 @@
+# Python 3.12 + pinned core package versions.
+# Important: use prebuilt openbabel-wheel, NEVER the source-built pip package "openbabel".
 name: gmx-acpype-min
 channels:
   - conda-forge
@@ -9,4 +11,4 @@ dependencies:
   - pip:
       - acpype==2023.10.27
       - streamlit==1.56.0
-      - openbabel==3.1.1.1
+      - openbabel-wheel==3.1.1.23
